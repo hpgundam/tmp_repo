@@ -1,0 +1,52 @@
+<html>
+<head>
+	<title>
+		{% if title %}
+			{{ title }}
+		{% else %}
+			bIo9
+		{% endif %}
+	</title>
+	{% load static %}
+	<link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/mystyle.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'font-awesome-4.7.0/css/font-awesome.min.css' %}">
+	<script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/jquery-3.2.1.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/myjs.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/my_functions.js' %}"></script>
+</head>
+<body>	
+	<div class="navbar navbar-default navbar-fixed-top">
+		<div class="container">
+			<div class="navbar-header">
+				<a href="{% url 'bIo9:index' %}" class="navbar-brand" id="brand">bIo9</a>
+			</div>
+			<ul class="nav navbar-nav pull-right">
+				{% if user.is_authenticated %}
+					<li><a href="{% url 'bIo9:show_user_page' user.id %}?next={{ request.path }}" class="thumbnail" id="nav_photo_outline">
+						<img src="{{ user.photo.url }}" class="img-responsive" id="nav_photo">
+					</a></li>
+					<li><a href="{% url 'bIo9:change_password' %}?next={{ request.path }}">Change Password</a></li>
+					<li><a href="{% url 'bIo9:reset_password' %}?next={{ request.path }}">Reset Password</a></li>
+					<li><a href="{% url 'bIo9:logout' %}?next={{ request.path }}">Log Out</a></li>
+				{% else %}
+					<li><a href="{% url 'bIo9:register' %}?next={{ request.path }}">Register</a></li>
+					<li><a href="{% url 'bIo9:login' %}?next={{ request.path }}">Log In</a></li>
+				{% endif %}
+			</ul>
+		</div>
+	</div>
+	{% if messages %}
+		<div class="messages" id="message_box">
+			{% for message in messages %}
+				<li {% if message.tags %} class="message {{ message.tags }}-message" {% endif %}>{{ message }}</li>
+			{% endfor%}
+		</div>
+	{% endif %}
+	<div class="main_area">
+		{% block body %}
+		{% endblock %}
+	</div>
+</body>
+</html>

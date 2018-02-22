@@ -1,0 +1,31 @@
+{% extends 'bIo9/layout.html' %}
+
+{% block body %}
+	<div class="container">
+		<div class="row">
+			<!-- list latest blogs -->
+			<div id="blog_area" class="col-lg-8 col-md-8 col-sm-8">
+				<h2 class="text-center">All Blogs:</h2>
+				<hr>
+				{% include 'bIo9/__blogs_in_one_page.html' %}				
+			</div>
+			<!-- list active users -->
+			<div id="user_area" class="col-lg-4 col-md-4 col-sm-4">
+				<h2 class="text-center">Active Users:</h2>
+				<hr>
+				{% for user in users %}
+					<a href="{% url 'bIo9:show_user_page' user.id %}" class="thumbnail active_user_outline">
+						<img src="{{ user.photo.url }}" alt="{{ user.nickname }}" class="active_user_photo">
+						<p class="user_nickname">
+							{% if user.nickname %}
+								{{ user.nickname }}
+							{% else %}
+								no nickname
+							{% endif %}
+						</p>
+					</a>
+				{% endfor %}
+			</div>	
+		</div>
+	</div>
+{% endblock %}

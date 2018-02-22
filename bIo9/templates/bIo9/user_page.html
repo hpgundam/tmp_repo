@@ -1,0 +1,105 @@
+{% extends 'bIo9/layout.html' %}
+
+
+
+{% block body %}
+<!-- include some information -->
+<div id="user_page_head" class="container">
+	<div class="row">
+		<div id="user_photo" class="col-lg-3 col-md-3 col-sm-3">
+			{% if cur_user == user %}
+				<a class="thumbnail user_photo_outline" href="{% url 'bIo9:change_user_photo' %}">
+					<img src="{{ cur_user.photo.url }}" alt="user photo" class="user_photo">
+				</a>
+			{% else %}
+				<a href="javascript:void(0);" class="thumbnail user_photo_outline" disabled>
+					<img src="{{ cur_user.photo.url }}" alt="user photo" class="user_photo">
+				</a>
+			{% endif %}
+		</div>
+		<div id="user_info_area" class="col-lg-9 col-md-9 col-sm-9">
+			<div class="row user_info_row">
+				<div class="col-lg-4 col-md-4 col-sm-4"><label class="user_info_item">nickname:</label> {{cur_user.nickname}}</div>
+				<div class="col-lg-2 col-md-2 col-sm-2"><label class="user_info_item">age:</label> {{cur_user.age}}</div>
+				<div class="col-lg-2 col-md-2 col-sm-2">
+					<label class="user_info_item">sex:</label> 
+					{% if cur_user.sex == 'M' %}
+						<i class="fa fa-mars"></i>
+					{% elif cur_user.sex == 'F' %}
+						<i class="fa fa-venus"></i>
+					{% else %}
+						<i class="fa fa-genderless"></i>
+					{% endif %}
+				</div>
+				<div class="col-lg-4 col-md-4 col-sm-4"><label class="user_info_item">email:</label> {{cur_user.email}}</div>
+			</div>
+			<div class="user_info_row">
+				<label class="user_info_item">feelings:</label> {{cur_user.mood}}
+			</div>
+			<div class="user_info_row">
+				<label class="user_info_item">introduction:</label> {{cur_user.introduction}}
+			</div>
+			{% if cur_user == user %}
+				<div class="user_info_row">
+					<a href="{% url 'bIo9:change_user_info' %}" class="btn btn-default">Change My Information</a>
+				</div>
+				<div class="user_info_row">
+					<a href="{% url 'bIo9:post_a_blog' %}" class="btn btn-default">Post A Blog</a>
+				</div>
+			{% elif cur_user != user and user.is_authenticated %}
+				<div class="user_info_row">
+					{% if can_follow_user %}
+						<a href="javascript:void(0);" class="btn btn-default" onclick="follow_a_user(this)">
+							Follow
+						</a>
+					{%else%}
+						<a href="javascript:void(0);" class="btn btn-default">Already Followed</a>
+					{% endif %}
+				</div>
+			{% endif %}
+		</div>
+	</div>
+</div>
+<!-- include blogs and relations -->
+<div class="container">
+	<div class="rows">
+		<div class="col-lg-9 col-md-9 col-sm-8 col-xs-10" id="blog_display_area">
+			<h2 class="text-center">My Blogs:</h2>
+			<hr>
+			{% include 'bIo9/__blogs_in_one_page.html' %}
+		</div>
+
+		<div class="col-lg-3 col-md-3 col-sm-4 col-xs-2">
+			<h2 class="text-center">My Follows:</h2>
+			<hr>
+			{% for user in user_follows %}
+				<a href="{% url 'bIo9:show_user_page' user.id %}" class="thumbnail active_user_outline">
+					<img src="{{ user.photo.url }}" class="active_user_photo">
+					<p class="user_nickname">{{ user.nickname }}</p>
+				</a>
+			{% endfor %}
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	function follow_a_user(obj){
+		$.ajax({
+			url: "{% url 'bIo9:follow_a_user' %}",
+			type: "POST",
+			data: {csrfmiddlewaretoken: '{{ csrf_token }}', 'page_user_id': '{{ cur_user.id }}'},
+			success: function(ret_data){
+				$(obj).text('Already Followed');
+				$(obj).removeAttr('onclick');
+			}
+		});
+	};
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+

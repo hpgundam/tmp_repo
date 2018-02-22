@@ -1,0 +1,57 @@
+{% load template_tags %}
+
+{% for obj in cur_page %}
+	<div class='one_blog'>
+		<div class="row">
+			<div class="col-lg-6 col-md-6 col-sm-6 one_comment_reply_to">
+			<a href="{% url 'bIo9:show_user_page' obj.user.id %}" class="thumbnail tiny_photo"><img src="{{ obj.user.photo.url }}" class="photo_in_thumbnail"></a>
+			<a href="{% url 'bIo9:show_user_page' obj.user.id %}" class="reply_user">{{ obj.user.nickname }}</a>
+			</div>
+			<div class="post_time col-lg-6 col-md-6 col-sm-6">post time  {{ obj.update_time|date:"Y-m-d H:i:s" }}</div>
+		</div>
+		<p class="blog_content">{{ obj.content }}</p>
+		<div class="row comment_and_follow_row">
+			<div class="col-lg-2 col-md-2 col-sm-2">
+				{% if user.is_authenticated and obj|blog_can_be_followed:user.id %}
+					<a href="javascript:void(0);" id="blog_{{ obj.id }}" onclick="like_a_blog(this)">
+						<i class="fa fa-thumbs-o-up fa-lg mythumb"></i>
+					</a>
+				{% else %}
+					<i class="fa fa-thumbs-up fa-lg mythumb"></i>
+				{% endif %}
+					<span>{{ obj.followers_amt }}</span>	 		
+		 	</div>
+		 	<div class="col-lg-2 col-md-2 col-sm-2">
+		 		<a class="btn btn-reverse" href="{% url 'bIo9:make_a_comment' obj.id %}"><i class="fa fa-comment"></i> <strong>Comment({{ obj.comment_set.count }})</strong></a>
+		 	</div>
+		</div>
+	</div>
+{% endfor %}
+
+<div class="pagination">
+	{% if cur_page.has_previous %}
+		<a href="?page={{ cur_page.previous_page_number }}">previous</a>
+	{% endif %}
+		{{ cur_page.number}}
+	{% if cur_page.has_next %}
+		<a href="?page={{ cur_page.next_page_number }}">next</a>
+	{% endif %}
+</div>
+
+<script type="text/javascript">
+	function like_a_blog(obj){
+	$.ajax({
+		url: "{% url 'bIo9:like_a_blog' %}",
+		type: "POST",
+		data: {csrfmiddlewaretoken: '{{ csrf_token }}', 
+				'user_id': '{{ user.id }}',
+				'ele_id': $(obj).attr('id')},
+		success: function(ret_data){
+			$(obj).next().text(jQuery.parseJSON(ret_data)['new_val']);
+			$(obj).children().attr('class', 'fa fa-thumbs-up fa-lg mythumb')
+			$(obj).parent().prepend($(obj).children())
+			$(obj).remove();
+		}
+	});
+};
+</script>
