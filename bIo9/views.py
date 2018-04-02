@@ -272,7 +272,7 @@ def unfollow_a_user(request):
 	user.follows = ';'.join(follows_list) if len(follows_list) != 0 else ''
 	user.save()
 	ret_data['result'] = 'success'
-	follow_sig.send(user.__class__, follower=user.id, followee=followee_id)
+	unfollow_sig.send(user.__class__, follower=user.id, followee=followee_id)
 	return HttpResponse(json.dumps(ret_data))
 
 class NotificationListView(LoginRequiredMixin, ListView):
@@ -344,6 +344,7 @@ class NotificationListApiView(LoginRequiredMixin, ReadOnlyModelViewSet):
 	
 	@detail_route(renderer_classes=[renderers.StaticHTMLRenderer])
 	def count(self, request, *args, **kwargs):
+		# import pdb; pdb.set_trace()
 		return Response({'count': self.get_queryset().count()})
 
 class NotificationUpdateApiView(LoginRequiredMixin, ModelViewSet):
