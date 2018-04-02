@@ -7,4 +7,5 @@ $(document).ready(function(){
 		}, function(){
 			$(this).find('p').hide();
 		});
+	
 });

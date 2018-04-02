@@ -1,0 +1,1 @@
+default_app_config = 'bIo9.apps.Bio9Config'

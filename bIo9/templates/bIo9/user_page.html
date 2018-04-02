@@ -48,13 +48,9 @@
 				</div>
 			{% elif cur_user != user and user.is_authenticated %}
 				<div class="user_info_row">
-					{% if can_follow_user %}
-						<a href="javascript:void(0);" class="btn btn-default" onclick="follow_a_user(this)">
-							Follow
-						</a>
-					{%else%}
-						<a href="javascript:void(0);" class="btn btn-default">Already Followed</a>
-					{% endif %}
+					<button class="btn btn-default" onclick="follow_a_user(this)">
+						{% if can_follow_user %}Follow{%else%}Unfollow{% endif %}
+					</button>
 				</div>
 			{% endif %}
 		</div>
@@ -83,13 +79,20 @@
 </div>
 <script type="text/javascript">
 	function follow_a_user(obj){
+		if($.trim($(obj).text()) == $.trim("Follow")){
+			var url = "{% url 'bIo9:follow_a_user' %}";
+			var btn_text = 'Unfollow';
+		}else{
+			var url = "{% url 'bIo9:unfollow_a_user' %}";
+			var btn_text = 'Follow';
+		}
 		$.ajax({
-			url: "{% url 'bIo9:follow_a_user' %}",
+			url: url,
+			cache: false,
 			type: "POST",
 			data: {csrfmiddlewaretoken: '{{ csrf_token }}', 'page_user_id': '{{ cur_user.id }}'},
 			success: function(ret_data){
-				$(obj).text('Already Followed');
-				$(obj).removeAttr('onclick');
+				$(obj).text(btn_text);
 			}
 		});
 	};

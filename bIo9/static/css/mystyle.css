@@ -3,6 +3,19 @@
 	font-weight: bold;
 }
 
+.notification-count {
+	border: red solid 1px;
+	border-radius: 30px;
+	margin: 5px;
+	padding: 5px;
+	background-color: rgba(255, 0, 0, 0.918);
+	font-weight: bold;
+	color: black;
+	height: 10px;
+	width: 1px;
+}
+
+
 .main_area {
 	margin-top: 70px;
 }
@@ -257,4 +270,11 @@ textarea {
 
 #id_content {
 	resize: none;
+}
+
+.notification-box {
+	border: silver 1px solid;
+	border-bottom: none;
+	margin: 20px;
+	padding: 20px;
 }

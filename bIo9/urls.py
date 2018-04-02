@@ -1,8 +1,9 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 from django.contrib.auth.views import password_reset_confirm
 from .views import register, index, log_in, log_out, change_password, reset_password, set_new_password,\
 					show_user_page, change_user_photo, change_user_info, post_a_blog, like_a_blog,\
-					follow_a_user, make_a_comment, get_full_chat
+					follow_a_user, unfollow_a_user, make_a_comment, get_full_chat
+from . import views
 
 app_name = 'bIo9'
 
@@ -23,7 +24,12 @@ urlpatterns = [
 	url(r'^user/post_a_blog$', post_a_blog, name='post_a_blog'),
 	url(r'^user/like_a_blog$', like_a_blog, name='like_a_blog'),
 	url(r'^user/follow_a_user$', follow_a_user, name='follow_a_user'),
+	url(r'^user/unfollow_a_user$', unfollow_a_user, name='unfollow_a_user'),
 	url(r'^user/comment/blog_id=(?P<blog_id>[1-9]+[0-9]*)$', make_a_comment, name='make_a_comment'),
 	url(r'^user/comment/comment_id=(?P<comment_id>[1-9]+[0-9]*)$', get_full_chat, name='get_full_chat'),
+	url(r'^notifications/$', views.NotificationListView.as_view(), name='notifications'),
+	url(r'^notification-list/$', views.NotificationListApiView.as_view({'get':'list'}), name='notification-list'),
+	url(r'^notification-list/count$', views.NotificationListApiView.as_view({'get':'count'}), name='notification-count'),
+	url(r'^notification/(?P<pk>[1-9]+[0-9]*)$', views.NotificationUpdateApiView.as_view({'get':'retrieve', 'PUT':'update', 'patch':'partial_update'}), name='notification'),
 ]
 

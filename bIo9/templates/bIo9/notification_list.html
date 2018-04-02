@@ -1,0 +1,44 @@
+{% extends "bIo9/layout.html" %}
+{% block body %}
+    <div class="notification-box">
+        <ul style="list-style:none;">
+            {% for notification in notifications %}
+                <li>
+                    <span class="notification-has-read-mark">
+                        {% if notification.has_read %}
+                            <i class="fa fa-check-circle"></i>
+                        {% else %}
+                            <i class="fa fa-circle-o"></i>
+                        {% endif %}
+                    </span>
+                    <span>{{ forloop.counter }}.</span>
+                    <a href="{% url 'bIo9:show_user_page' notification.note_sub_id %}?notification_id={{ notification.id }}" class="notification-part">{{ notification.note_sub }}</a>
+                    {{ notification.note_verb }}
+                    <a href="{% url 'bIo9:show_user_page' notification.note_obj_id %}?notification_id={{ notification.id }}" class="notification-part">you</a>
+                    {% if notification.blog %}
+                        in the blog
+                        <a href="{% url 'bIo9:make_a_comment' notification.blog.id %}?notification_id={{ notification.id }}" class="notification-part">{{ notification.blog.content|truncatewords:'10' }}</a>
+                    {% endif %}
+                    {% if notification.comment %}
+                        on your comment
+                        <a href="{% url 'bIo9:get_full_chat' notification.comment.id %}?notification_id={{ notification.id }}" class="notification-part">{{ notification.comment.content|truncatewords:"10"  }}</a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <button id="mytest" onclick="mytest()" class="btn btn-default">
+        mytest
+    </button>
+    <script>
+        function mytest(){
+            $.ajax({
+                url: "{% url 'bIo9:notification' 6 %}",
+                type: 'patch',
+                headers: {"X_CSRFToken":$.cookie('csrftoken')},
+                data: {'has_read': 'false', csrfmiddlewaretoken: '{{ csrf_token }}'},
+            })
+        }
+    </script>
+{% endblock body %}

@@ -51,4 +51,17 @@ class Comment(models.Model):
 	my_floor = models.PositiveIntegerField(default=1)
 
 
-
+class Notification(models.Model):
+	'''
+	used for notifications of follow and unfollow and comment on blog or another comment
+	'''
+	note_sub = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note_sub')
+	note_verb = models.CharField(max_length=100, default='followed')
+	note_obj = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note_obj')
+	blog = models.ForeignKey(Blog, on_delete=models.CASCADE, blank=True, null=True)
+	comment = models.ForeignKey(Comment, on_delete=models.CASCADE, blank=True, null=True)
+	create_time = models.DateTimeField(auto_now=True)
+	has_read = models.BooleanField(default=False)
+     
+	class Meta:
+		ordering = ['-create_time']

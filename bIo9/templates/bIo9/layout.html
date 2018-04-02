@@ -13,6 +13,7 @@
 	<link rel="stylesheet" type="text/css" href="{% static 'font-awesome-4.7.0/css/font-awesome.min.css' %}">
 	<script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
 	<script type="text/javascript" src="{% static 'js/jquery-3.2.1.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/jquery.cookie.js' %}"></script>
 	<script type="text/javascript" src="{% static 'js/myjs.js' %}"></script>
 	<script type="text/javascript" src="{% static 'js/my_functions.js' %}"></script>
 </head>
@@ -26,6 +27,9 @@
 				{% if user.is_authenticated %}
 					<li><a href="{% url 'bIo9:show_user_page' user.id %}?next={{ request.path }}" class="thumbnail" id="nav_photo_outline">
 						<img src="{{ user.photo.url }}" class="img-responsive" id="nav_photo">
+					</a></li>
+					<li><a href="{% url 'bIo9:notifications' %}">
+						Notifications<span class="notification-count"></span>
 					</a></li>
 					<li><a href="{% url 'bIo9:change_password' %}?next={{ request.path }}">Change Password</a></li>
 					<li><a href="{% url 'bIo9:reset_password' %}?next={{ request.path }}">Reset Password</a></li>
@@ -49,4 +53,17 @@
 		{% endblock %}
 	</div>
 </body>
+<script>
+	$(document).ready(function(){
+		$.ajax({
+			url: "{% url 'bIo9:notification-count' %}",
+			type: "get",
+			cache: false,
+			data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
+			success: function(ret_data) {
+				$(".notification-count").text(ret_data['count']);
+			}
+		});
+	});
+</script>
 </html>

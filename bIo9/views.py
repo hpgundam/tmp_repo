@@ -1,18 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST, require_GET
 from django.http import HttpResponse
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .models import User, Blog, Comment
+from .models import User, Blog, Comment, Notification
 from .forms import RegisterForm, LoginForm, ChangePasswordForm, ResetPasswordForm, PasswordSetForm,\
 					ChangePhotoForm, ChangeInfoForm, PostBlogForm
-from .utils import get_cur_page
+from .utils import get_cur_page, mark_notification_as_read
 # Create your views here.
 import re
 import json
+
+from .notifications import follow_sig, unfollow_sig, comment_sig
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.decorators import detail_route
+from rest_framework import renderers
+from rest_framework.response import Response
+from .serializers import NotificationSerializer
 
 def register(request):
 	redirect_to = request.POST.get('next', request.GET.get('next', ''))
@@ -65,7 +74,7 @@ def log_in(request):
 			return render(request, 'bIo9/login.html', {'form': form, 'title': title})
 	else:
 		form = LoginForm()
-		return render(request, 'bIo9/login.html', {'form': form, 'title': title})
+		return render(request, 'bIo9/login.html', {'form': form, 'title': title, 'next': redirect_to})
 
 
 @login_required
@@ -154,7 +163,7 @@ def show_user_page(request, user_id):
 
 	user_follow_ids = user.follows.split(';')
 	user_follows = [ get_object_or_404(User, id=int(x)) for x in user_follow_ids if x != '']
-
+	mark_notification_as_read(request)
 	return render(request, 'bIo9/user_page.html', {'cur_user': user, 
 													'title': title, 
 													'cur_page': cur_page,
@@ -245,10 +254,36 @@ def like_a_blog(request):
 def follow_a_user(request):
 	ret_data = {}
 	user = request.user
-	user.follows += request.POST['page_user_id'] + ';'
+	followee_id = request.POST['page_user_id']
+	user.follows += followee_id + ';'
 	user.save()
 	ret_data['result'] = 'success'	
+	follow_sig.send(user.__class__, follower=user.id, followee=followee_id)
 	return HttpResponse(json.dumps(ret_data))
+
+@login_required
+@require_POST
+def unfollow_a_user(request):
+	ret_data = {}
+	user = request.user
+	follows_list = user.follows.split(';')
+	followee_id = request.POST['page_user_id']
+	follows_list.remove(followee_id)
+	user.follows = ';'.join(follows_list) if len(follows_list) != 0 else ''
+	user.save()
+	ret_data['result'] = 'success'
+	follow_sig.send(user.__class__, follower=user.id, followee=followee_id)
+	return HttpResponse(json.dumps(ret_data))
+
+class NotificationListView(LoginRequiredMixin, ListView):
+	model = Notification
+	context_object_name = 'notifications'
+	template_name = 'bIo9/notification_list.html'
+	login_url = reverse_lazy('bIo9:login')
+
+	def get_queryset(self):
+		queryset = super().get_queryset()
+		return queryset.filter(note_obj=self.request.user)
 
 
 def make_a_comment(request, blog_id):
@@ -262,6 +297,13 @@ def make_a_comment(request, blog_id):
 			comment = blog.comment_set.create(user=request.user, content=content, reply_to_id=reply_to, my_floor=my_floor)
 			comment.save()
 			redirect_to = request.POST['next']
+			if reply_to and reply_to != request.user.id :
+				comment = get_object_or_404(Comment, id=reply_to)
+				comment_sig.send(Comment, commenter=request.user.id, commentee=comment.user.id, blog=blog, comment=comment)
+			else:
+				if request.user != blog.user:
+					comment_sig.send(Comment, commenter=request.user.id, commentee=blog.user.id, blog=blog, comment=None)
+			mark_notification_as_read(request)
 			return redirect(redirect_to)
 		else:
 			messages.error(request, 'Please log in first.')
@@ -271,6 +313,7 @@ def make_a_comment(request, blog_id):
 		page_no = request.GET.get('page')
 		comment_per_page = 2
 		cur_page = get_cur_page(comments, comment_per_page, page_no)
+		mark_notification_as_read(request)
 		return render(request, 'bIo9/make_a_comment.html', {'title': title, 'cur_page': cur_page, 'obj': blog})
 
 
@@ -286,13 +329,30 @@ def get_full_chat(request, comment_id):
 	comment_per_page = 3
 	page_no = request.GET.get('page', None)
 	cur_page = get_cur_page(full_chat, comment_per_page, page_no)
+	mark_notification_as_read(request)
 	return render(request, 'bIo9/full_chat.html', {'title': title, 'cur_page': cur_page})
 
 
+class NotificationListApiView(LoginRequiredMixin, ReadOnlyModelViewSet):
+	serializer_class = NotificationSerializer
+	queryset = Notification.objects.filter(has_read=False)
+	login_url = reverse_lazy('bIo9:login')
 
+	def get_queryset(self):
+		queryset = super().get_queryset().filter(note_obj=self.request.user)
+		return queryset
+	
+	@detail_route(renderer_classes=[renderers.StaticHTMLRenderer])
+	def count(self, request, *args, **kwargs):
+		return Response({'count': self.get_queryset().count()})
 
+class NotificationUpdateApiView(LoginRequiredMixin, ModelViewSet):
+	serializer_class = NotificationSerializer
+	login_url = reverse_lazy('bIo9:login')
+	queryset = Notification.objects.all()
 
-
-
-
+	def get_queryset(self):
+		queryset = super().get_queryset().filter(note_obj=self.request.user)
+		return queryset
+	
 
