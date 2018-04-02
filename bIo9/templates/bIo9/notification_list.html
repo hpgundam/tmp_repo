@@ -28,17 +28,4 @@
         </ul>
     </div>
 
-    <button id="mytest" onclick="mytest()" class="btn btn-default">
-        mytest
-    </button>
-    <script>
-        function mytest(){
-            $.ajax({
-                url: "{% url 'bIo9:notification' 6 %}",
-                type: 'patch',
-                headers: {"X_CSRFToken":$.cookie('csrftoken')},
-                data: {'has_read': 'false', csrfmiddlewaretoken: '{{ csrf_token }}'},
-            })
-        }
-    </script>
 {% endblock body %}
